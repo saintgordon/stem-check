@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Stem Check (TOOL / 007) by Saint Gordon Collective — 100% in-browser pre-mix stem validator. Verify 0:00 alignment, native 44.1/48 kHz sample rates, 0 dBFS clipping, and dry vocals before sending stems for mixing."
+    />
+    <title>Stem Check — Pre-Mix Stem Validator · Saint Gordon Collective</title>
+    <link rel="icon" href="assets/icons/mark.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="assets/fonts/OPTIEngraversOldEnglish.woff"
+      as="font"
+      type="font/woff"
+      crossorigin
+    />
+    <link rel="stylesheet" href="app.css?v=20261124-1" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to stem validator</a>
+
+    <!-- Saint Gordon Collective Header -->
+    <header class="site-header">
+      <div class="header-inner">
+        <a
+          class="brand"
+          href="#top"
+          id="brand-home-link"
+          aria-label="Stem Check by Saint Gordon Collective"
+        >
+          <img
+            src="assets/icons/mark.svg"
+            alt=""
+            width="36"
+            height="36"
+            class="brand-mark"
+          />
+          <span class="brand-text">
+            <span class="brand-name">Saint Gordon</span>
+            <span class="brand-sub">STEM CHECK · PRE-MIX VALIDATOR</span>
+          </span>
+        </a>
+
+        <nav class="header-nav" aria-label="Tool status and collective links">
+          <div class="header-actions">
+            <span class="privacy-badge">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span>100% In-Browser</span>
+            </span>
+            <button
+              type="button"
+              id="btn-header-clear"
+              class="sg-btn sg-btn-outline sg-btn-sm hidden"
+            >
+              New Session
+            </button>
+            <a
+              class="header-ext-link micro"
+              href="https://saintgordon.vercel.app/collaboration.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Collaborate ↗
+            </a>
+            <a
+              class="header-ext-link micro"
+              href="https://saintgordon.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Collective ↗
+            </a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="app-main">
+      <div id="top" class="upload-section" data-state="empty">
+        <div class="hero-meta micro">
+          <span>TOOL / 007 — PRE-MIX STEM VALIDATOR</span>
+          <span>SAINT GORDON / COLLABORATE READY</span>
+        </div>
+
+        <div class="hero-band">
+          <div class="hero-title-col">
+            <h1 class="page-wordmark">
+              Stem Check
+              <span>PRE-MIX STEM VALIDATOR</span>
+            </h1>
+          </div>
+          <div class="hero-copy-col">
+            <p class="hero-lead">
+              Verify every vocal take and beat before you zip and send them to your mix engineer.
+            </p>
+            <p class="hero-sub">
+              Drop a folder of stems to inspect true native sample rates (44.1 vs 48 kHz), 0:00 timeline
+              sync, 0 dBFS digital clipping, and baked-in stereo reverb or delay — with sample-locked
+              multi-track auditioning and Side (L&minus;R) FX isolation, 100% inside your browser.
+            </p>
+          </div>
+        </div>
+
+        <!-- Upload Dropzone -->
+        <div
+          class="sg-card dropzone-card"
+          id="upload-dropzone"
+          role="region"
+          aria-label="Drop stem audio files or folder"
+        >
+          <input
+            type="file"
+            id="file-upload-input"
+            multiple
+            accept="audio/*,.wav,.flac,.aif,.aiff,.mp3,.m4a,.aac,.ogg,.opus"
+            class="sr-only"
+          />
+          <input
+            type="file"
+            id="folder-upload-input"
+            webkitdirectory
+            directory
+            multiple
+            class="sr-only"
+          />
+
+          <div class="dropzone-body" id="dropzone-click-target">
+            <span class="micro dropzone-kicker">000 / INGEST STEMS</span>
+            <h2 class="dropzone-heading" id="dropzone-heading">
+              Drag &amp; Drop Stem Files or a Whole Folder Here
+            </h2>
+            <p class="dropzone-formats">
+              Reads native container headers directly for <code>WAV</code>, <code>FLAC</code>,
+              <code>AIFF</code>, <code>MP3</code>, <code>M4A</code>, and <code>OGG</code> before
+              Web Audio decode — catching 44.1 kHz vs 48 kHz mismatches that browsers normally hide.
+            </p>
+
+            <div class="dropzone-buttons">
+              <button type="button" id="btn-select-files" class="sg-btn sg-btn-ink">
+                Select Stem Files
+              </button>
+              <button type="button" id="btn-select-folder" class="sg-btn sg-btn-outline">
+                Select Folder
+              </button>
+              <button type="button" id="btn-load-demo" class="sg-btn sg-btn-outline">
+                Load Demo Session (4 Stems)
+              </button>
+            </div>
+          </div>
+
+          <div class="dropzone-toolbar micro">
+            <span>✳ NO UPLOADS — ALL DSP &amp; HEADERS RUN LOCALLY IN MEMORY</span>
+            <span>CHECKS: 0:00 SYNC · NATIVE SR · 0 dBFS CLIPS · MID/SIDE DRY VOCALS</span>
+          </div>
+
+          <!-- Decode Progress Bar -->
+          <div id="decode-progress-container" class="progress-wrap hidden" aria-live="polite">
+            <div class="progress-meta micro">
+              <span id="decode-progress-text">Inspecting native headers &amp; decoding stems...</span>
+              <span id="decode-progress-pct">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="decode-progress-bar" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <!-- Per-file Decode Warnings -->
+          <div id="decode-errors-banner" class="notice-banner hidden" role="alert">
+            <div class="notice-head">
+              <strong id="decode-errors-title">Some files could not be decoded</strong>
+              <button type="button" id="btn-dismiss-errors" class="sg-btn-link micro">
+                Dismiss ×
+              </button>
+            </div>
+            <ul id="decode-errors-list" class="notice-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= AUDIT RESULTS WORKSPACE ================= -->
+      <div id="audit-results" class="hidden">
+        <!-- Manifesto Verdict Sheet -->
+        <section
+          class="verdict-sheet"
+          id="verdict-sheet"
+          data-verdict="ready"
+          aria-labelledby="verdict-title"
+        >
+          <div class="verdict-sheet-top micro">
+            <span class="verdict-stamp" id="verdict-stamp">✳ TRANSMISSION APPROVED</span>
+            <span id="verdict-ref-meta">REFERENCE TIMELINE · 0:00.00</span>
+          </div>
+
+          <div class="verdict-head-grid">
+            <div>
+              <h2 class="verdict-title" id="verdict-title">Transmission Approved.</h2>
+              <p class="verdict-subtitle" id="verdict-subtitle">
+                All stems match sample rate, start cleanly from 0:00, and pass dry-vocal inspection.
+              </p>
+            </div>
+
+            <div class="verdict-file-box">
+              <span class="micro verdict-file-kicker">SESSION SUMMARY</span>
+              <div class="verdict-filename" id="verdict-session-breakdown">0 Stems Loaded</div>
+              <div class="micro verdict-specs" id="verdict-session-counts">
+                0 FIX · 0 WARN · 0 PASS
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-metrics-grid" id="hero-metrics-grid">
+            <div class="hero-metric">
+              <span class="micro hero-metric-label">Stems Loaded</span>
+              <span class="hero-metric-val" id="metric-stems">—</span>
+              <span class="micro hero-metric-sub" id="metric-stems-sub">—</span>
+            </div>
+            <div class="hero-metric">
+              <span class="micro hero-metric-label">Native Sample Rate</span>
+              <span class="hero-metric-val" id="metric-sr">—</span>
+              <span class="micro hero-metric-sub" id="metric-sr-sub">—</span>
+            </div>
+            <div class="hero-metric">
+              <span class="micro hero-metric-label">0:00 Sync Alignment</span>
+              <span class="hero-metric-val" id="metric-sync">—</span>
+              <span class="micro hero-metric-sub" id="metric-sync-sub">—</span>
+            </div>
+            <div class="hero-metric">
+              <span class="micro hero-metric-label">Digital Clipping</span>
+              <span class="hero-metric-val" id="metric-clips">—</span>
+              <span class="micro hero-metric-sub" id="metric-clips-sub">—</span>
+            </div>
+            <div class="hero-metric">
+              <span class="micro hero-metric-label">Dry Vocal Check</span>
+              <span class="hero-metric-val" id="metric-dry">—</span>
+              <span class="micro hero-metric-sub" id="metric-dry-sub">—</span>
+            </div>
+          </div>
+
+          <div class="verdict-actions">
+            <button type="button" id="btn-export-md" class="sg-btn sg-btn-paper-solid">
+              Export Audit Report (.md) ↓
+            </button>
+            <button type="button" id="btn-copy-checklist" class="sg-btn sg-btn-paper">
+              Copy Checklist
+            </button>
+            <a
+              class="sg-btn sg-btn-paper-outline"
+              href="https://saintgordon.vercel.app/collaboration.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Collaborate Guidelines ↗
+            </a>
+            <button type="button" id="btn-clear-session" class="sg-btn sg-btn-paper-outline">
+              Clear Session
+            </button>
+          </div>
+        </section>
+
+        <!-- Dark Hardware Multi-Track Sync Deck -->
+        <section class="console-anchor" aria-labelledby="deck-heading">
+          <div class="section-bar">
+            <div>
+              <span class="micro">MULTI-TRACK SYNC &amp; SIDE FX MONITOR</span>
+              <h2 id="deck-heading" class="section-title">Synchronized Stem Deck</h2>
+              <p class="section-sub">
+                Audition all stems locked from 0:00. Solo any vocal and hit <strong>Side [S]</strong> to isolate baked-in stereo reverb or delay.
+              </p>
+            </div>
+            <div class="section-bar-actions">
+              <button type="button" id="btn-add-more-files" class="sg-btn sg-btn-outline sg-btn-sm">
+                + Add Stems
+              </button>
+              <button type="button" id="btn-add-more-folder" class="sg-btn sg-btn-outline sg-btn-sm">
+                + Add Folder
+              </button>
+            </div>
+          </div>
+
+          <div class="studio-deck" id="studio-deck" data-state="paused">
+            <div class="deck-head">
+              <div class="deck-id">
+                <span class="deck-led" aria-hidden="true"></span>
+                <span class="deck-label">STEM DECK // MULTI-TRACK SYNC</span>
+                <span class="deck-sub-id" id="deck-monitor-readout">STEREO MONITOR</span>
+              </div>
+              <div class="deck-head-right">
+                <span class="deck-state" id="deck-state-pill">STANDBY</span>
+              </div>
+            </div>
+
+            <!-- Quick Jump & Ear-Check Helpers -->
+            <div class="deck-wave-toolbar">
+              <div class="deck-wave-group">
+                <span class="micro deck-strip-label">QUICK AUDITION</span>
+                <div class="quick-jump-group">
+                  <button type="button" id="btn-jump-zero" class="deck-mini-btn">
+                    0:00 Start
+                  </button>
+                  <button type="button" id="btn-jump-first-vox" class="deck-mini-btn">
+                    First Vocal
+                  </button>
+                  <button type="button" id="btn-jump-clip" class="deck-mini-btn hidden">
+                    Jump to Clip
+                  </button>
+                  <button type="button" id="btn-solo-wet-side" class="deck-mini-btn deck-mini-accent hidden">
+                    Solo Flagged Vocal + SIDE
+                  </button>
+                </div>
+              </div>
+              <div class="deck-time-pair micro">
+                <span id="deck-time-current">00:00.0</span>
+                <span class="deck-time-sep">/</span>
+                <span id="deck-time-total">00:00.0</span>
+              </div>
+            </div>
+
+            <!-- Stacked Multi-Track Lanes + Synchronized Waveform Canvas + L/R Meters -->
+            <div class="multitrack-shell">
+              <div class="multitrack-gutter" id="multitrack-gutter" aria-label="Stem track controls">
+                <!-- Populated dynamically: header + 1 lane per stem aligned with canvas rows -->
+              </div>
+
+              <div
+                class="multitrack-canvas-wrap"
+                id="multitrack-canvas-wrap"
+                role="slider"
+                tabindex="0"
+                aria-label="Multi-track timeline scrubber"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+              >
+                <canvas id="multitrack-canvas" width="900" height="280"></canvas>
+              </div>
+
+              <div class="deck-vu-pair" aria-label="Master stereo output meters">
+                <div class="vu-column">
+                  <span class="clip-led" id="clip-led-l" title="Left clip indicator"></span>
+                  <div class="vu-track">
+                    <div id="vu-meter-l" class="vu-fill"></div>
+                  </div>
+                  <span class="micro vu-label">L</span>
+                </div>
+                <div class="vu-column">
+                  <span class="clip-led" id="clip-led-r" title="Right clip indicator"></span>
+                  <div class="vu-track">
+                    <div id="vu-meter-r" class="vu-fill"></div>
+                  </div>
+                  <span class="micro vu-label">R</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="multitrack-legend micro">
+              <span>CLICK OR DRAG TIMELINE TO SCRUB</span>
+              <span>
+                <span class="legend-swatch swatch-ref"></span> REF END
+                &nbsp;·&nbsp;
+                <span class="legend-swatch swatch-clip"></span> CLIPPING (&ge; 0 dBFS)
+                &nbsp;·&nbsp;
+                <span class="legend-swatch swatch-gap"></span> SHORT / MISSING TAIL
+              </span>
+            </div>
+
+            <!-- Transport & Monitor Matrix -->
+            <div class="deck-transport-bar">
+              <div class="transport-group">
+                <button type="button" id="btn-play-pause" class="deck-pill-btn deck-pill-primary">
+                  <span id="play-btn-glyph" aria-hidden="true">▶</span>
+                  <span id="play-btn-text">Play All</span>
+                  <kbd>Space</kbd>
+                </button>
+                <button type="button" id="btn-restart" class="deck-pill-btn" title="Restart from 0:00 (R)">
+                  ↺ 0:00 <kbd>R</kbd>
+                </button>
+                <button type="button" id="btn-clear-solo" class="deck-pill-btn hidden">
+                  Clear Solo/Mute
+                </button>
+              </div>
+
+              <div class="transport-group monitor-matrix" role="group" aria-label="Monitoring matrix">
+                <button type="button" class="deck-seg-btn active" data-monitor="stereo" aria-pressed="true">
+                  Stereo
+                </button>
+                <button
+                  type="button"
+                  class="deck-seg-btn"
+                  data-monitor="mono"
+                  aria-pressed="false"
+                  title="Mono sum L+R (M)"
+                >
+                  Mono <kbd>M</kbd>
+                </button>
+                <button
+                  type="button"
+                  class="deck-seg-btn"
+                  data-monitor="side"
+                  aria-pressed="false"
+                  title="Side difference L-R isolates baked-in stereo reverb/delay (S)"
+                >
+                  Side <kbd>S</kbd>
+                </button>
+              </div>
+
+              <div class="transport-group">
+                <label class="deck-volume" for="master-volume-slider">
+                  <span class="micro">VOL</span>
+                  <input
+                    type="range"
+                    id="master-volume-slider"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0.88"
+                    aria-label="Master output volume"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div class="deck-shortcuts micro">
+              <span><kbd>Space</kbd> Play / Pause</span>
+              <span><kbd>R</kbd> Restart 0:00</span>
+              <span><kbd>M</kbd> Mono Sum</span>
+              <span><kbd>S</kbd> Side (Isolate Stereo FX)</span>
+              <span><kbd>←</kbd>/<kbd>→</kbd> Nudge ±2s</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 001 / TRANSMISSION CHECKLIST -->
+        <section class="sg-card checklist-card" aria-labelledby="checklist-heading">
+          <div class="checklist-head">
+            <div>
+              <span class="micro detail-kicker">001 / TRANSMISSION CHECKLIST</span>
+              <h2 id="checklist-heading" class="detail-title">Actionable Pass / Fix Audit</h2>
+            </div>
+            <span class="micro checklist-summary" id="checklist-summary-pill">
+              0 FIX · 0 WARN · 0 PASS
+            </span>
+          </div>
+
+          <ul id="checklist-list" class="checklist-list"></ul>
+        </section>
+
+        <!-- 002 / STEM-BY-STEM AUDIT -->
+        <section class="sg-card audit-table-card" aria-labelledby="stem-table-heading">
+          <div class="checklist-head">
+            <div>
+              <span class="micro detail-kicker">002 / STEM-BY-STEM AUDIT</span>
+              <h2 id="stem-table-heading" class="detail-title">Per-Track Technical Breakdown</h2>
+            </div>
+            <span class="micro checklist-summary">
+              CHANGE ROLE TO RE-AUDIT ANY TRACK
+            </span>
+          </div>
+
+          <div class="stem-table-wrap">
+            <div class="stem-table-head micro" aria-hidden="true">
+              <div>Status</div>
+              <div>Stem &amp; Role</div>
+              <div>Native Format</div>
+              <div>Length &amp; 0:00 Sync</div>
+              <div>Peak / Clips</div>
+              <div>Dry / Mid-Side</div>
+              <div>Audition</div>
+            </div>
+            <div id="stem-table-body" class="stem-table-body"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 003 / SAINT GORDON COLLABORATE PROTOCOL (Always Visible Reference) -->
+      <section class="sg-card protocol-card" aria-labelledby="protocol-heading">
+        <div class="protocol-top">
+          <div>
+            <span class="micro detail-kicker">003 / SAINT GORDON COLLABORATE PROTOCOL</span>
+            <h2 id="protocol-heading" class="detail-title">
+              How to Prepare &amp; Send Your Stems
+            </h2>
+            <p class="section-sub">
+              Stem Check automates the technical side of Saint Gordon’s free vocal mixing &amp; feature transmission protocol.
+            </p>
+          </div>
+          <a
+            class="paper-button protocol-cta"
+            href="https://saintgordon.vercel.app/collaboration.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>Open Collaborate</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+
+        <div class="protocol-grid">
+          <article class="protocol-step">
+            <span class="micro step-num">01</span>
+            <h3>Completely Unedited Takes</h3>
+            <p>
+              Export vocal files as recorded. Leave natural breaths intact — avoid awkward hard cuts or clicks at 0:00.
+            </p>
+          </article>
+          <article class="protocol-step">
+            <span class="micro step-num">02</span>
+            <h3>100% Dry — No Effects Added</h3>
+            <p>
+              Bypass all reverb, delay, chorus, widener, EQ, and autotune plugins prior to bounce so vocals can be sculpted cleanly.
+            </p>
+          </article>
+          <article class="protocol-step">
+            <span class="micro step-num">03</span>
+            <h3>Export All Tracks from 0:00</h3>
+            <p>
+              Every stem must start at Bar 1 (0:00) at one matching sample rate (44.1 kHz or 48 kHz, 24-bit WAV) so takes lock straight to the beat.
+            </p>
+          </article>
+          <article class="protocol-step">
+            <span class="micro step-num">04</span>
+            <h3>Label, Zip &amp; Send References</h3>
+            <p>
+              Name tracks clearly (<code>Main Vox</code>, <code>Main Double</code>, <code>Adlibs</code>, <code>Harmonies</code>, <code>Beat</code>), zip your folder, and include 1–2 reference songs.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <!-- Saint Gordon Collective Footer -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">Saint Gordon Collective</div>
+        <div class="footer-nav">
+          <a href="https://saintgordon.vercel.app" target="_blank" rel="noopener noreferrer">
+            Saint Gordon Home ↗
+          </a>
+          <a
+            href="https://saintgordon.vercel.app/collaboration.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Collaborate ↗
+          </a>
+          <a
+            href="https://saintgordon.vercel.app/collection.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            The Collection ↗
+          </a>
+          <a
+            href="https://github.com/Firewallaby/stem-check"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Stem Check on GitHub ↗
+          </a>
+        </div>
+        <div class="footer-meta micro">
+          <span>© <span id="footer-year">2026</span> SAINT GORDON COLLECTIVE</span>
+          <span>INDEPENDENT SOUND. IMPERFECT BY DESIGN.</span>
+          <span>100% CLIENT-SIDE WEB AUDIO</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Global Toast Notifications -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script type="module" src="js/app.js?v=20261124-1"></script>
+  </body>
+</html>
