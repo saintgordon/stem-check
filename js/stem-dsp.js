@@ -1923,7 +1923,7 @@ export function buildStemReportMarkdown(session, generatedAt = new Date()) {
   lines.push(
     '',
     '---',
-    '*Generated 100% client-side by [Stem Check](https://firewallaby.github.io/stem-check/) · [Saint Gordon Collaborate Protocol](https://saintgordon.vercel.app/collaboration.html)*',
+    '*Generated 100% client-side by [Stem Check](https://saintgordon.github.io/stem-check/) · [Saint Gordon Collaborate Protocol](https://saintgordon.vercel.app/collaboration.html)*',
     ''
   );
 

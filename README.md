@@ -2,7 +2,7 @@
 
 **Stem Check** is a 100% client-side, zero-dependency pre-mix stem validator built for the [Saint Gordon Collective](https://saintgordon.vercel.app) and its free [Collaborate](https://saintgordon.vercel.app/collaboration.html) vocal mixing & guest feature workflow.
 
-**Live App:** https://firewallaby.github.io/stem-check/
+**Live App:** https://saintgordon.github.io/stem-check/
 
 Drop a folder of vocal takes and your beat into the browser before you zip and send them — no server uploads, no DAW plugins required, and zero audio leaves your machine.
 
